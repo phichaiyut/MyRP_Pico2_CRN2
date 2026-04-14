@@ -36,7 +36,7 @@ int readPositionF(int Track, int noise) {
   unsigned char i, online = 0;
   unsigned long avg = 0;
   unsigned int sum = 0;
-  static int last_value = 0;
+  static int last_value = (NUM_SENSORS - 1) * 1000 / 2;
   ReadCalibrateF();
   for (i = 0; i < NUM_SENSORS; i++) {
     int values = F[i];
@@ -44,7 +44,7 @@ int readPositionF(int Track, int noise) {
       online = 1;
     }
     if (values > noise) {
-      avg += (long)(values) * (i * RefCali);
+      avg += (long)(values) * (i * 1000);
       sum += values;
     }
   }
@@ -57,7 +57,7 @@ int readPositionF(int Track, int noise) {
     {
       return 0;
     } else {
-      return (NUM_SENSORS - 1) * RefCali;
+      return (NUM_SENSORS - 1) * 1000;
     }
   }
   last_value = avg / sum;
@@ -70,7 +70,7 @@ int readPositionB(int Track, int noise) {
   unsigned char i, online = 0;
   unsigned long avg = 0;
   unsigned int sum = 0;
-  static int last_value = 0;
+  static int last_value = (NUM_SENSORS - 1) * 1000 / 2;
   ReadCalibrateB();
   for (i = 0; i < NUM_SENSORS; i++) {
     int values = B[i];
@@ -78,7 +78,7 @@ int readPositionB(int Track, int noise) {
       online = 1;
     }
     if (values > noise) {
-      avg += (long)(values) * (i * RefCali);
+      avg += (long)(values) * (i * 1000);
       sum += values;
     }
   }
@@ -91,7 +91,7 @@ int readPositionB(int Track, int noise) {
      {
       return 0;
     } else {
-      return (NUM_SENSORS - 1) * RefCali;
+      return (NUM_SENSORS - 1) * 1000;
     }
   }
   last_value = avg / sum;
@@ -99,29 +99,25 @@ int readPositionB(int Track, int noise) {
 }
 
 void SerialPositionF() {
-  int pos = readPositionF(RefCali/4, RefCali/20); // เรียกฟังก์ชันอ่านค่า
+  int pos = readPositionF(250 ,50); // เรียกฟังก์ชันอ่านค่า
   Serial.print("Position: ");
   Serial.println(pos);           // ส่งค่าออกทาง Serial
 }
 
 void SerialPositionB() {
-  int pos = readPositionB(RefCali/4, RefCali/20); // เรียกฟังก์ชันอ่านค่า
+  int pos = readPositionB(250, 50); // เรียกฟังก์ชันอ่านค่า
   Serial.print("Position: ");
   Serial.println(pos);           // ส่งค่าออกทาง Serial
 }
 
 
-int constrainPID(int val, int minVal, int maxVal) {
-  if (val > maxVal) return maxVal;
-  if (val < minVal) return minVal;
-  return val;
-}
+
 
 void PIDF(int SpeedL, int SpeedR, float Kp, float Kd) {
-  int Pos = readPositionF(RefCali/4, RefCali/20);
+  int Pos = readPositionF(250, 50);
   int Error = Pos - set_position;
   // if(abs(Error) < 1000) Error = 0;
-  int PID_Value = ((Kp / RefCali) * Error) + ((Kd / RefCali) * (Error - LastError_F));
+  int PID_Value = (Kp * Error) + (Kd * (Error - LastError_F));
   LastError_F = Error;
 
   int LeftPower  = SpeedL  + PID_Value;
@@ -160,15 +156,15 @@ switch (ModePidStatus) {
       if (RightPower > MaxSpeed) RightPower = MaxSpeed;
       if (RightPower < 0) RightPower = 0;
   }
-  Motor(LeftPower, RightPower);
-   delayMicroseconds(50);   
+  robot.Motor(LeftPower, RightPower);
+      
 }
 
 
 void PIDB(int SpeedL, int SpeedR, float Kp, float Kd) {
-  int Pos = readPositionB(RefCali/4, RefCali/20);
+  int Pos = readPositionB(250, 50);
   int Error = Pos - set_position;
-  int PID_Value = ((Kp / RefCali) * Error) + ((Kd / RefCali) * (Error - LastError_B));
+  int PID_Value = ((Kp) * Error) + (Kd * (Error - LastError_B));
   LastError_B = Error;
 
   int LeftPower  = SpeedL  + PID_Value;
@@ -207,8 +203,8 @@ switch (ModePidStatus) {
       if (RightPower < 0) RightPower = 0;
   }
 
-  Motor(-LeftPower, -RightPower); // วิ่งย้อน (กลับทิศกับ PIDF)
-   delayMicroseconds(50);   
+  robot.Motor(-LeftPower, -RightPower); // วิ่งย้อน (กลับทิศกับ PIDF)
+    
 }
 
 void FFtimer(int baseSpeed, int totalTime) {
@@ -219,7 +215,7 @@ void FFtimer(int baseSpeed, int totalTime) {
   while (millis() <= endTime) {
     PIDF(LeftBaseSpeed,RightBaseSpeed,PID_KP,PID_KD);
   }
-  RGB();
+  
 }
 
 void BBtimer(int baseSpeed, int totalTime) {
@@ -230,7 +226,7 @@ void BBtimer(int baseSpeed, int totalTime) {
   while (millis() <= endTime) {
     PIDB(BackLeftBaseSpeed,BackRightBaseSpeed,PID_KP_Back,PID_KD_Back);
   }
-  RGB();
+ 
 }
 
 void FFT(int baseSpeed, int totalTime) {
@@ -241,7 +237,7 @@ void FFT(int baseSpeed, int totalTime) {
   while (millis() <= endTime) {
     PIDF(LeftBaseSpeed,RightBaseSpeed,PID_KP,PID_KD);
   }
-  RGB();
+ 
 }
 
 void BBT(int baseSpeed, int totalTime) {
@@ -252,7 +248,7 @@ void BBT(int baseSpeed, int totalTime) {
   while (millis() <= endTime) {
     PIDB(BackLeftBaseSpeed,BackRightBaseSpeed,PID_KP_Back,PID_KD_Back);
   }
-  RGB();
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -262,77 +258,63 @@ void TrackSelectF(int spd, char x) {
   } else if (x == 'S') {
     MotorShot();
   } 
-  else if (x == 'p') {
+  else if (x == 'p' || x == 'P') {
     BZon();
-    Motor(LeftBaseSpeed, RightBaseSpeed);
+    robot.Motor(LeftBaseSpeed, RightBaseSpeed);
     delay(20);
     ReadCalibrateF();
     while (1) {
-      Motor(LeftBaseSpeed, RightBaseSpeed);
+      robot.Motor(LeftBaseSpeed, RightBaseSpeed);
       ReadCalibrateF();
-      if (F[1] < Ref && F[6] < Ref) {
+      if (F[0] < Ref  && F[7] < Ref) {
         delay(1000/spd);
         BZoff();
         break;
       }
     }
-  } else if (x == 'l') {
-    ToCenter();
-    SpinL();
-  } else if (x == 'L') {
+  }  else if (x == 'l' || x == 'L') {
     ToCenterC();
     SpinL();
-  } else if (x == 'r') {
-    ToCenter();
-    SpinR();
-  } else if (x == 'R') {
+  } else if (x == 'r' || x == 'R') {
     ToCenterC();
     SpinR();
-  } else if (x == 'q') {
+  } else if (x == 'q' || x == 'Q') {
     BZon();
     while (1) {
-      Motor(spd/2,spd/2);
+      robot.Motor(spd/2,spd/2);
       ReadCalibrateF();
       if (F[0] < Ref) {
-        delay(15);
+        delay(50);
         BZoff();
         break;
       }
     }
     TurnLeft();
-  } else if (x == 'e') {
+  } else if (x == 'e' || x == 'E') {
     BZon();
     while (1) {
-      Motor(spd/2,spd/2);
+      robot.Motor(spd/2,spd/2);
       ReadCalibrateF();
       if (F[7] < Ref) {
-        delay(15);
+        delay(50);
         BZoff();
         break;
       }
     }
     TurnRight();
-  } else if (x == 'c') {
-    ToCenter();
-  } else if (x == 'C') {
+  }  else if (x == 'c' || x == 'C') {
     ToCenterC();
-  } else if (x == 'b') {
-    ToCenterCB();
-  } else if (x == 'P') {
-    Motor(LeftBaseSpeed, RightBaseSpeed);
-    Beep(2000/spd);
   } 
-
-  else if (x == 'B') {
+  else if (x == 'b' || x == 'B') {
     BZon();
-    Motor(LeftBaseSpeed, RightBaseSpeed);
+    robot.Motor(LeftBaseSpeed, RightBaseSpeed);
     delay(20);
     while (1) {
-      Motor(LeftBaseSpeed,RightBaseSpeed);
+      robot.Motor(LeftBaseSpeed,RightBaseSpeed);
       ReadCalibrateB();
       if ((B[0] > Ref || B[7] > Ref)) {
-        Motor(LeftBaseSpeed, RightBaseSpeed);
-        delay(5);
+        robot.Motor(LeftBaseSpeed, RightBaseSpeed);
+        delay(50);
         BZoff();
         break;
       }
@@ -348,253 +330,20 @@ else if (x == 'x') {
   Back_TurnR();
 }
 
-else if (x == 'a') {
+else if (x == 'a' || x == 'A' ) {
   ToCenterC();
   BSpinL();
 }
 
-else if (x == 'd') {
-  ToCenter();
-  BSpinR();
-}
-
-
-else if (x == 'Q') {
-  BTurnLeft();
-}
-else if (x == 'E') {
-  BTurnRight();
-}
-
-  RGB();
-}
-
-void TrackSelectFR(int spd, char x) {
-  if (x == 's') {
-    MotorStop();
-  } else if (x == 'S') {
-    MotorShot();
-  } else if (x == 'p') {
-    BZon();
-    Motor(LeftBaseSpeed, RightBaseSpeed);
-    delay(30);
-    ReadCalibrateF();
-    while (1) {
-      PIDF(LeftBaseSpeed,RightBaseSpeed,PID_KP,PID_KD);
-      ReadCalibrateF();
-      if (F[1] < Ref && F[6] < Ref) {
-        delay(1000/spd);
-        BZoff();
-        break;
-      }
-    }
-  } else if (x == 'l') {
-    ToCenterR();
-    SpinL();
-  } else if (x == 'L') {
-    ToCenterCR();
-    SpinL();
-  } else if (x == 'r') {
-    ToCenterR();
-    SpinR();
-  } else if (x == 'R') {
-    ToCenterCR();
-    SpinR();
-  } else if (x == 'q') {
-    BZon();
-     while (1) {
-      Motor(spd/2,spd/2);
-      ReadCalibrateF();
-      if (F[0] < Ref ) {
-        delay(15);
-        BZoff();
-        break;
-      }
-    }
-    TurnLeft();
-  } else if (x == 'e') {
-    BZon();
-    while (1) {
-      Motor(spd/2,spd/2);
-      ReadCalibrateF();
-      if (F[7] < Ref) {
-        delay(15);
-        BZoff();
-        break;
-      }
-    }
-    TurnRight();
-  } else if (x == 'c') {
-    ToCenterR();
-  } else if (x == 'C') {
-    ToCenterCR();
-  }
-  else if (x == 'b') {
-    ToCenterCB();
-  }
-  else if (x == 'P') {
-    Motor(LeftBaseSpeed, RightBaseSpeed);
-    Beep(2000/spd);
-  } 
-
-  else if (x == 'B') {
-    BZon();
-    Motor(LeftBaseSpeed, RightBaseSpeed);
-    delay(20);
-    while (1) {
-      Motor(LeftBaseSpeed,RightBaseSpeed);
-      ReadCalibrateB();
-      if ((B[0] > Ref || B[7] > Ref)) {
-        Motor(LeftBaseSpeed, RightBaseSpeed);
-        delay(5);
-        BZoff();
-        break;
-      }
-    }
-  }
-  else if (x == 'z') {
-    // ToCenterCB();
-  ToSensorBack();
-  Back_TurnL();
-}
-
-else if (x == 'x') {
-  ToSensorBack();
-  Back_TurnR();
-}
-
-else if (x == 'a') {
-  ToCenterC();
-  BSpinL();
-}
-
-else if (x == 'd') {
+else if (x == 'd' || x == 'D' ) {
   ToCenterC();
   BSpinR();
 }
 
-else if (x == 'Q') {
-  BTurnLeft();
-}
-else if (x == 'E') {
-  BTurnRight();
+
 }
 
-  RGB();
-}
 
-void TrackSelectFL(int spd, char x) {
-  if (x == 's') {
-    MotorStop();
-  } else if (x == 'S') {
-    MotorShot();
-  }  else if (x == 'p') {
-    BZon();
-    Motor(LeftBaseSpeed, RightBaseSpeed);
-    delay(30);
-    ReadCalibrateF();
-    while (1) {
-      PIDF(LeftBaseSpeed,RightBaseSpeed,PID_KP,PID_KD);
-      ReadCalibrateF();
-      if (F[1] < Ref && F[6] < Ref) {
-        delay(1000/spd);
-        BZoff();
-        break;
-      }
-    }
-  } else if (x == 'l') {
-    ToCenterL();
-    SpinL();
-  } else if (x == 'L') {
-    ToCenterCL();
-    SpinL();
-  } else if (x == 'r') {
-    ToCenterL();
-    SpinR();
-  } else if (x == 'R') {
-    ToCenterCL();
-    SpinR();
-  } else if (x == 'q') {
-    BZon();
-     while (1) {
-      Motor(spd/2,spd/2);
-      ReadCalibrateF();
-      if (F[0] < Ref ) {
-        delay(15);
-        BZoff();
-        break;
-      }
-    }
-    TurnLeft();
-  } else if (x == 'e') {
-    BZon();
-     while (1) {
-      Motor(spd/2,spd/2);
-      ReadCalibrateF();
-      if ( F[7] < Ref) { 
-        delay(15);
-        BZoff();
-        break;
-      }
-    }
-    TurnRight();
-  } else if (x == 'c') {
-    ToCenterL();
-  } else if (x == 'C') {
-    ToCenterCL();
-  }
-  else if (x == 'b') {
-    ToCenterCB();
-  }
-  else if (x == 'P') {
-    Motor(LeftBaseSpeed, RightBaseSpeed);
-    Beep(2000/spd);
-  } 
-   else if (x == 'B') {
-    BZon();
-    Motor(LeftBaseSpeed, RightBaseSpeed);
-    delay(20);
-    while (1) {
-      Motor(LeftBaseSpeed,RightBaseSpeed);
-      ReadCalibrateB();
-      if ((B[0] > Ref || B[7] > Ref)) {
-        Motor(LeftBaseSpeed, RightBaseSpeed);
-        delay(5);
-        BZoff();
-        break;
-      }
-    }
-  }
-  
-  else if (x == 'z') {
-   ToSensorBack();
-  Back_TurnL();
-}
-
-else if (x == 'x') {
-  ToSensorBack();
-  Back_TurnR();
-}
-
-else if (x == 'a') {
-  ToCenterC();
-  BSpinL();
-}
-
-else if (x == 'd') {
-  ToCenterC();
-  BSpinR();
-}
-
-else if (x == 'Q') {
-  BTurnLeft();
-}
-else if (x == 'E') {
-  BTurnRight();
-}
-
-  RGB();
-}
 
 
 void TrackSelectB(int spd, char x) {
@@ -602,96 +351,125 @@ void TrackSelectB(int spd, char x) {
     MotorStop();
   } else if (x == 'S') {
     MotorShot();
-  } else if (x == 'p') {
+  } else if (x == 'p' || x == 'P') {
     BZon();
-    Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
+    robot.Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
     delay(20);
     while (1) {
-      Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
+      robot.Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
       ReadCalibrateB();
-      if ((B[1] < Ref && B[6] < Ref)) {
-        Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
+      if (B[0] < Ref && B[7] < Ref) {
+        robot.Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
         delay(1500/spd);
         BZoff();
         break;
       }
     }
-  } else if (x == 'l') {
-    BackCenter();
-    SpinL();
-  } else if (x == 'L') {
+  }  else if (x == 'l' || x == 'L') {
     BackCenterC();
     SpinL();
-  } else if (x == 'r') {
-    BackCenter();
-    SpinR();
-  } else if (x == 'R') {
+  }  else if (x == 'r' || x == 'R') {
     BackCenterC();
     SpinR();
-  } else if (x == 'c') {
-    BackCenter();
-  } else if (x == 'C') {
+  }  else if (x == 'c' || x == 'C') {
     BackCenterC();
-  } else if (x == 'q') {
+  } else if (x == 'q' || x == 'Q') {
     BZon();
      while (1) {
-      Motor(-(spd/2),-(spd/2));
+      robot.Motor(-(spd/2),-(spd/2));
       ReadCalibrateB();
       if (B[7] < Ref ) {
-        delay(15);
+        delay(50);
         BZoff();
         break;
       }
     }
     BTurnLeft();
-  } else if (x == 'e') {
+  } else if (x == 'e' || x == 'E') {
     BZon();
      while (1) {
-      Motor(-(spd/2),-(spd/2));
+      robot.Motor(-(spd/2),-(spd/2));
       ReadCalibrateB();
       if ( B[0] < Ref) { 
-        delay(15);
+        delay(50);
         BZoff();
         break;
       }
     }
     BTurnRight();
   }
-  else if (x == 'P') {
-    Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
-    Beep(1500/spd);
-  }
-else if (x == 'B') {
+  
+else if (x == 'b' || x == 'B') {
     BZon();
-    Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
+    robot.Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
     delay(20);
     while (1) {
-      Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
+      robot.Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
       ReadCalibrateF();
       if ((F[0] > Ref || F[7] > Ref)) {
-        Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
+        robot.Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
         delay(5);
         BZoff();
         break;
       }
     }
   }
-  else if (x == 'a') {
+  else if (x == 'a' || x == 'A') {
     BackCenterC();
     BSpinL();
-  } else if (x == 'd') {
+  } else if (x == 'd' || x == 'D') {
     BackCenterC();
     BSpinR();
   } 
-  else if (x == 'z') {
-    Back_TurnL();
-}
-  else if (x == 'x') {
-  Back_TurnR();
+
 }
 
-  RGB();
+void FFtimer(int Speed, int totalTime , char select) {
+	BaseSpeed = Speed;
+	InitialSpeed();
+  unsigned long startTime = millis();
+  unsigned long endTime = startTime + totalTime;
+  while (millis() <= endTime) {
+    PIDF(LeftBaseSpeed,RightBaseSpeed,PID_KP,PID_KD);
+  }
+  TrackSelectF(Speed, select);
 }
+
+void BBtimer(int Speed, int totalTime, char select) {
+	BaseSpeed = Speed;
+	InitialSpeed();
+  unsigned long startTime = millis();
+  unsigned long endTime = startTime + totalTime;
+  while (millis() <= endTime) {
+    PIDB(BackLeftBaseSpeed,BackRightBaseSpeed,PID_KP_Back,PID_KD_Back);
+  }
+  TrackSelectB(Speed, select);
+}
+
+void FFT(int Speed, int totalTime, char select) {
+	BaseSpeed = Speed;
+	InitialSpeed();
+  unsigned long startTime = millis();
+  unsigned long endTime = startTime + totalTime;
+  while (millis() <= endTime) {
+    PIDF(LeftBaseSpeed,RightBaseSpeed,PID_KP,PID_KD);
+  }
+  TrackSelectF(Speed, select);
+}
+
+void BBT(int Speed, int totalTime, char select) {
+	BaseSpeed = Speed;
+	InitialSpeed();
+  unsigned long startTime = millis();
+  unsigned long endTime = startTime + totalTime;
+  while (millis() <= endTime) {
+    PIDB(BackLeftBaseSpeed,BackRightBaseSpeed,PID_KP_Back,PID_KD_Back);
+  }
+  TrackSelectB(Speed, select);
+}
+
+
+
 
 void FF(int Speed, char select) {
 	BaseSpeed = Speed;
@@ -743,7 +521,7 @@ void FFL(int Speed, char select) {
       break;
     }
   }
-  TrackSelectFL(Speed, select);
+  TrackSelectF(Speed, select);
 }
 
 void FFL2(int Speed, char select) {
@@ -756,7 +534,7 @@ void FFL2(int Speed, char select) {
       break;
     }
   }
-  TrackSelectFL(Speed, select);
+  TrackSelectF(Speed, select);
 }
 
 void FFR(int Speed, char select) {
@@ -769,7 +547,7 @@ void FFR(int Speed, char select) {
       break;
     }
   }
-  TrackSelectFR(Speed, select);
+  TrackSelectF(Speed, select);
 }
 
 
@@ -783,7 +561,7 @@ void FFR2(int Speed, char select) {
       break;
     }
   }
-  TrackSelectFR(Speed, select);
+  TrackSelectF(Speed, select);
 }
 
 void FFWhite(int Speed, char select) {
@@ -817,7 +595,7 @@ void FFBlack(int Speed, char select) {
 	InitialSpeed();
   Move(LeftBaseSpeed,RightBaseSpeed,50);
   while (1) {
-    Motor(LeftBaseSpeed,RightBaseSpeed);
+    robot.Motor(LeftBaseSpeed,RightBaseSpeed);
     ReadCalibrateF();
     if (F[0] > Ref || F[1] > Ref || F[2] > Ref || F[3] > Ref || F[4] > Ref || F[5] > Ref || F[6] > Ref || F[7] > Ref) {
       break;
@@ -831,7 +609,7 @@ void FFB(int Speed, char select) {
 	InitialSpeed();
   Move(LeftBaseSpeed,RightBaseSpeed,50);
   while (1) {
-    Motor(LeftBaseSpeed,RightBaseSpeed);
+    robot.Motor(LeftBaseSpeed,RightBaseSpeed);
     ReadCalibrateF();
     if (F[0] > Ref || F[1] > Ref || F[2] > Ref || F[3] > Ref || F[4] > Ref || F[5] > Ref || F[6] > Ref || F[7] > Ref) {
       break;
@@ -843,7 +621,7 @@ void FFBlack(int SpeedL,int SpeedR, char select) {
 	
   Move(SpeedL,SpeedR,50);
   while (1) {
-    Motor(SpeedL,SpeedR);
+    robot.Motor(SpeedL,SpeedR);
     ReadCalibrateF();
     if (F[0] > Ref || F[1] > Ref || F[2] > Ref || F[3] > Ref || F[4] > Ref || F[5] > Ref || F[6] > Ref || F[7] > Ref) {
       break;
@@ -1000,7 +778,7 @@ void BBBlack(int Speed, char select) {
 	InitialSpeed();
   Move(-BackLeftBaseSpeed,-BackRightBaseSpeed,50);
   while (1) {
-    Motor(-BackLeftBaseSpeed,-BackRightBaseSpeed);
+    robot.Motor(-BackLeftBaseSpeed,-BackRightBaseSpeed);
     ReadCalibrateB();
     if (B[0] > Ref || B[1] > Ref || B[2] > Ref || B[3] > Ref || B[4] > Ref || B[5] > Ref || B[6] > Ref || B[7] > Ref) {
       break;
@@ -1014,7 +792,7 @@ void BBB(int Speed, char select) {
 	InitialSpeed();
   Move(-BackLeftBaseSpeed,-BackRightBaseSpeed,50);
   while (1) {
-    Motor(-BackLeftBaseSpeed,-BackRightBaseSpeed);
+    robot.Motor(-BackLeftBaseSpeed,-BackRightBaseSpeed);
     ReadCalibrateB();
     if (B[0] > Ref || B[1] > Ref || B[2] > Ref || B[3] > Ref || B[4] > Ref || B[5] > Ref || B[6] > Ref || B[7] > Ref) {
       break;
@@ -1027,7 +805,7 @@ void BBBlack(int SpeedL,int SpeedR, char select) {
 	
   Move(-SpeedL,-SpeedR,50);
   while (1) {
-    Motor(-SpeedL,-SpeedR);
+    robot.Motor(-SpeedL,-SpeedR);
     ReadCalibrateB();
     if (B[0] > Ref || B[1] > Ref || B[2] > Ref || B[3] > Ref || B[4] > Ref || B[5] > Ref || B[6] > Ref || B[7] > Ref) {
       break;
@@ -1072,7 +850,7 @@ void FFtimer(int baseSpeed,float Kp,float Kd, int totalTime) {
   while (millis() <= endTime) {
     PIDF(LeftBaseSpeed,RightBaseSpeed,Kp,Kd);
   }
-  RGB();
+  
   
 }
 
@@ -1084,7 +862,7 @@ void BBtimer(int baseSpeed,float Kp,float Kd, int totalTime) {
   while (millis() <= endTime) {
     PIDB(BackLeftBaseSpeed,BackRightBaseSpeed,Kp,Kd);
   }
-  RGB();
+  
 }
 
 void FFT(int baseSpeed,float Kp,float Kd, int totalTime) {
@@ -1095,7 +873,7 @@ void FFT(int baseSpeed,float Kp,float Kd, int totalTime) {
   while (millis() <= endTime) {
     PIDF(LeftBaseSpeed,RightBaseSpeed,Kp,Kd);
   }
-  RGB();
+  
 }
 
 void BBT(int baseSpeed,float Kp,float Kd, int totalTime) {
@@ -1106,7 +884,7 @@ void BBT(int baseSpeed,float Kp,float Kd, int totalTime) {
   while (millis() <= endTime) {
     PIDB(BackLeftBaseSpeed,BackRightBaseSpeed,Kp,Kd);
   }
-  RGB();
+ 
 }
 
 void FF(int Speed,float Kp,float Kd, char select) {
@@ -1159,7 +937,7 @@ void FFL(int Speed,float Kp,float Kd, char select) {
       break;
     }
   }
-  TrackSelectFL(Speed, select);
+  TrackSelectF(Speed, select);
 }
 
 void FFL2(int Speed,float Kp,float Kd, char select) {
@@ -1172,7 +950,7 @@ void FFL2(int Speed,float Kp,float Kd, char select) {
       break;
     }
   }
-  TrackSelectFL(Speed, select);
+  TrackSelectF(Speed, select);
 }
 
 void FFR(int Speed,float Kp,float Kd, char select) {
@@ -1185,7 +963,7 @@ void FFR(int Speed,float Kp,float Kd, char select) {
       break;
     }
   }
-  TrackSelectFR(Speed, select);
+  TrackSelectF(Speed, select);
 }
 
 
@@ -1199,7 +977,7 @@ void FFR2(int Speed, float Kp,float Kd,char select) {
       break;
     }
   }
-  TrackSelectFR(Speed, select);
+  TrackSelectF(Speed, select);
 }
 
 void FFWhite(int Speed,float Kp,float Kd, char select) {
@@ -1401,7 +1179,7 @@ void FD_Dist(int Speed, char select, int DisT) {
 	BaseSpeed = Speed;
 	InitialSpeed();
   while (1) {
-    Motor(LeftBaseSpeed, RightBaseSpeed);
+    robot.Motor(LeftBaseSpeed, RightBaseSpeed);
     delayMicroseconds(50);
     if (analogRead(DIST) >  DisT) {
       break;
@@ -1414,7 +1192,7 @@ void BK_Dist(int Speed, char select, int DisT) {
 	BaseSpeed = Speed;
 	InitialSpeed();
   while (1) {
-    Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
+    robot.Motor(-BackLeftBaseSpeed, -BackRightBaseSpeed);
     delayMicroseconds(50);
     if (analogRead(DIST) < DisT) {
 
@@ -1425,32 +1203,57 @@ void BK_Dist(int Speed, char select, int DisT) {
 }
 
 
-void SL_Dist(int Speed, int DisT) {
-  MotorStop(0);
-  Motor(-Speed, Speed);
-  while(1)
-  {
-    delayMicroseconds(50);
-    if (analogRead(DIST) >  DisT) {
-      
+
+
+// ---------- GoStart / GoEnd ----------
+
+void GoStart(int LeftSpeed, int RightSpeed) {
+  Move(LeftSpeed, RightSpeed, 100);
+  while (1) {
+    ReadCalibrateF();
+    robot.Motor(LeftSpeed, RightSpeed);
+    if (F[0] < Ref && F[7] < Ref) {
+      Move(LeftSpeed, RightSpeed, 100);
       break;
     }
   }
-  MotorStop(0);
 }
 
-void SR_Dist(int Speed, int DisT) {
-  MotorStop(0);
-  Motor(Speed, -Speed);
-  while(1){
-    delayMicroseconds(50);
-    if (analogRead(DIST) >=  DisT) {
-      
+void GoStart(int Speed) {
+  BaseSpeed = Speed;
+  InitialSpeed();
+  Move(LeftBaseSpeed ,RightBaseSpeed, 100);
+  while (1) {
+    ReadCalibrateF();
+    robot.Motor(LeftBaseSpeed, RightBaseSpeed);
+    if (F[0] < Ref && F[7] < Ref) {
+      Move(LeftBaseSpeed, RightBaseSpeed, 100);
       break;
     }
   }
-  MotorStop(0);
 }
 
-
-
+void GoEnd(int LeftSpeed, int RightSpeed) {
+  while (1) {
+    ReadCalibrateC();
+    robot.Motor(LeftSpeed, RightSpeed);
+    if (C[0] > RefC && C[1] > RefC) {
+      Move(LeftSpeed, RightSpeed, 100);
+      break;
+    }
+  }
+  MotorStop();
+}
+void GoEnd(int Speed) {
+  BaseSpeed = Speed;
+  InitialSpeed();
+  while (1) {
+    ReadCalibrateC();
+    robot.Motor(LeftBaseSpeed, RightBaseSpeed);
+    if (C[0] > RefC && C[1] > RefC) {
+      Move(LeftBaseSpeed, RightBaseSpeed, 100);
+      break;
+    }
+  }
+  MotorStop();
+}

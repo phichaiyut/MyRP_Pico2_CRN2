@@ -1,8 +1,7 @@
 
 void  Move(int l,int r,int time){
-Motor(l,r);
+robot.Motor(l,r);
 delay(time);
-
 
 }
 
@@ -37,6 +36,11 @@ void MotorStop(int t) {
   delay(t);
 }
 
+void Stop(int t) {
+  analogWrite(PWMA, 0);  
+  analogWrite(PWMB, 0);
+  delay(t);
+}
 
 void TestMotor(){
 	Move(60, 0, 500);

@@ -27,18 +27,14 @@ RefCali = set_calibate;
 void ReadF() {
   
 for (int i = 0; i < NUM_SENSORS; i++) {
-  adc.begin(14, 15, 16, 13 );
-  adc.begin(14, 15, 16, 17 );  //adc.begin(5, 4, 12, 20 );    // 5=clk, 4=IN, 12=out
-    F[i] = adc.readADC(F_PIN[i]);
+    F[i] = robot.read_sensorA(F_PIN[i]);
   }
 
 }
 
 void ReadB() {
     for (int i = 0; i < NUM_SENSORS; i++) {
-   adc.begin(14, 15, 16, 17 ); 
-   adc.begin(14, 15, 16, 13 );  //adc.begin(5, 4, 12, 20 );    // 5=clk, 4=IN, 12=out
-    B[i] = adc.readADC(B_PIN[i]);
+    B[i] = robot.read_sensorB(B_PIN[i]);
   }
 
 }
@@ -59,64 +55,56 @@ void ReadC() {
 
 void ReadCalibrateF() {
   ReadF();
-  if (LineColor == 0) {
   for (int i = 0; i < NUM_SENSORS; i++) {
-    int x = map(F[i], sensorMinA[i], sensorMaxA[i], RefCali, 0);
-    if (x < 0) x = 0;
-    if (x > RefCali) x = RefCali;
-    F[i] = x;
-  }
-  }
-  else{
-      for (int i = 0; i < NUM_SENSORS; i++) {
-    int x = map(F[i], sensorMinA[i], sensorMaxA[i], 0, RefCali);
-    if (x < 0) x = 0;
-    if (x > RefCali) x = RefCali;
+    int x;
+    if (LineColor == 0)
+      x = map(F[i], robot.sensorMinA[i], robot.sensorMaxA[i], 1000, 0);
+    else
+      x = map(F[i], robot.sensorMinA[i], robot.sensorMaxA[i], 0, 1000);
+    if (x < 80)   x = 0;
+    if (x > 900)  x = 1000;
+    // if (x < 0)    x = 0;
+    // if (x > 1000) x = 1000;
     F[i] = x;
   }
 
-  }
 
 }
 
 void ReadCalibrateC() {
   ReadC();
-  if (LineColor == 0) {
+  
   for (int i = 0; i < 2; i++) {
-    int x = map(C[i], sensorMinC[i], sensorMaxC[i], RefCali, 0);
-    if (x < 0) x = 0;
-    if (x > RefCali) x = RefCali;
+    int x;
+    if (LineColor == 0)
+      x = map(C[i], robot.sensorMinC[i], robot.sensorMaxC[i], 1000, 0);
+    else
+      x = map(C[i], robot.sensorMinC[i], robot.sensorMaxC[i], 0, 1000);
+    if (x < 200)   x = 0;
+    if (x > 900)  x = 1000;
+    // if (x < 0)    x = 0;
+    // if (x > 1000) x = 1000;
     C[i] = x;
   }
-}
-else{
-for (int i = 0; i < 2; i++) {
-    int x = map(C[i], sensorMinC[i], sensorMaxC[i], 0, RefCali);
-    if (x < 0) x = 0;
-    if (x > RefCali) x = RefCali;
-    C[i] = x;
-  }
-}
+  
 }
 
 void ReadCalibrateB() {
   ReadB();
-  if (LineColor == 0) {
+
   for (int i = 0; i < NUM_SENSORS; i++) {
-    int x = map(B[i], sensorMinB[i], sensorMaxB[i], RefCali, 0);
-    if (x < 0) x = 0;
-    if (x > RefCali ) x = RefCali;
+    int x;
+    if (LineColor == 0)
+      x = map(B[i], robot.sensorMinB[i], robot.sensorMaxB[i], 1000, 0);
+    else
+      x = map(B[i], robot.sensorMinB[i], robot.sensorMaxB[i], 0, 1000);
+    if (x < 300)   x = 0;
+    if (x > 800)  x = 1000;
+    // if (x < 0)    x = 0;
+    // if (x > 1000) x = 1000;
     B[i] = x;
   }
-}
-else {
-   for (int i = 0; i < NUM_SENSORS; i++) {
-    int x = map(B[i], sensorMinB[i], sensorMaxB[i], 0, RefCali);
-    if (x < 0) x = 0;
-    if (x > RefCali) x = RefCali;
-    B[i] = x;
-  }
-}
+  
 }
 
 void ReadSensor() {
@@ -140,27 +128,26 @@ void RefCenterLineValue(int x) {
 
 
 void Beep(int delayb) {
-   tone(BUZZER_PIN, 900, delayb);
+   pinMode(BUZZER_PIN, OUTPUT);
+  analogWriteFreq(2700);
+  analogWriteRange(255);
+  analogWrite(BUZZER_PIN, 200);
   delay(delayb);
-  noTone(BUZZER_PIN);
+  analogWrite(BUZZER_PIN, 0);
 }
 
 void b_beebb() {
-  tone(BUZZER_PIN, 2000, 80);
-  delay(100);
-  tone(BUZZER_PIN, 1000, 80);
-  delay(100);
-  tone(BUZZER_PIN, 2000, 80);
-  delay(100);
-  tone(BUZZER_PIN, 2500, 150);
-  delay(100);
+  
 }
 
 void BZon(){
-	tone(BUZZER_PIN,2700);	
+	// pinMode(BUZZER_PIN, OUTPUT);
+  // analogWriteFreq(2700);
+  // analogWriteRange(255);
+  // analogWrite(BUZZER_PIN, 200);	
 }
 void BZoff(){
-	noTone(BUZZER_PIN);
+	// analogWrite(BUZZER_PIN, 0);
 }
 
 
