@@ -1,55 +1,59 @@
 void _setting() {
   /******************** IMU : BNO055 ********************/
-if (!bno.begin()) {
-  Serial.println("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-}
-delay(1000);
-bno.setExtCrystalUse(true);
+  if (!bno.begin()) {
+    Serial.println("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+  }
+  delay(1000);
+  bno.setExtCrystalUse(true);
 
-Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
+  Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
 
-/******************** CALIBRATION ********************/
-set_value_calibate(1000);     // ค่า Recalibrate
+  /******************** CALIBRATION ********************/
+  set_value_calibate(1000);  // ค่า Recalibrate
 
-/******************** LINE SENSOR CONFIG ********************/
-RefLineValue(400);            // ค่า threshold เซนเซอร์หน้า-หลัง
-RefCenterLineValue(700);      // ค่า threshold เซนเซอร์คู่กลาง
-TrackLineColor(0);            // 0 = พื้นขาวเส้นดำ | 1 = พื้นดำเส้นขาว
-Dottedline(0);                // 0 = ไม่มีเส้นประ | 1 = มีเส้นประ
+  clampSensorValueF(80, 900);   //สำหรับกรองค่า  calibrate
+  clampSensorValueB(500, 850);  //สำหรับกรองค่า  calibrate
+  clampSensorValueC(200, 900);  //สำหรับกรองค่า  calibrate
+  
+  /******************** LINE SENSOR CONFIG ********************/
+  RefLineValue(400);        // ค่า threshold เซนเซอร์หน้า-หลัง
+  RefCenterLineValue(800);  // ค่า threshold เซนเซอร์คู่กลาง
+  TrackLineColor(0);        // 0 = พื้นขาวเส้นดำ | 1 = พื้นดำเส้นขาว
+  Dottedline(0);            // 0 = ไม่มีเส้นประ | 1 = มีเส้นประ
 
-/******************** LINE CENTERING ********************/
-// set_line_center(0);        // เดินธรรมดา เข้ากลางหุ่น
-set_line_center(1);           // เดินตามเส้น เข้ากลางหุ่น
-SetToCenterSpeed(20);         // ความเร็วเข้ากลางหุ่น
-set_kp_kd_slow(0.010, 0.08);  // PID ช่วงช้า
+  /******************** LINE CENTERING ********************/
+  // set_line_center(0);        // เดินธรรมดา เข้ากลางหุ่น
+  set_line_center(1);           // เดินตามเส้น เข้ากลางหุ่น
+  SetToCenterSpeed(20);         // ความเร็วเข้ากลางหุ่น
+  set_kp_kd_slow(0.010, 0.08);  // PID ช่วงช้า
 
-/******************** TURN & SPEED CONFIG ********************/
-SetTurnSpeed(40);             // ความเร็วเลี้ยวเข้าแยก
-
-
-TurnSpeedLeft(25, 80, 60);    // เลี้ยวซ้าย (q Q)
-TurnSpeedRight(80, 25, 60);   // เลี้ยวขวา (e E)
+  /******************** TURN & SPEED CONFIG ********************/
+  SetTurnSpeed(40);  // ความเร็วเลี้ยวเข้าแยก
 
 
-ModeSpdPID(0, 100, -5);       // โหมดควบคุมความเร็ว
-// SetRobotPID(0.014, 0.04);  // PID หลัก (ยังไม่ใช้)
+  TurnSpeedLeft(25, 80, 60);   // เลี้ยวซ้าย (q Q)
+  TurnSpeedRight(80, 25, 60);  // เลี้ยวขวา (e E)
 
-/******************** LINE POSITION ********************/
-set_position_line(3500);      // 0–7000 | 1500=ซ้าย 3500=กลาง 5500=ขวา
 
-/******************** DISTANCE SENSOR ********************/
-SetAnalogDistance(A3);        // A0–A3 เซนเซอร์ตรวจจับวัตถุ
+  ModeSpdPID(0, 100, -5);  // โหมดควบคุมความเร็ว
+  // SetRobotPID(0.014, 0.04);  // PID หลัก (ยังไม่ใช้)
 
-/******************** DEBUG / SERIAL MONITOR ********************/
-// SerialDistance();                  // เซนเซอร์วัดระยะ
-// Serial_FrontSensor();              // เซนเซอร์หน้า
-// Serial_BackSensor();               // เซนเซอร์หลัง
-// Serial_CenterSensor();             // เซนเซอร์กลาง
-// SerialCalibrate_FrontSensor();     // ค่า Calibrate หน้า
-// SerialCalibrate_BackSensor();      // ค่า Calibrate หลัง
-// SerialCalibrate_CenterSensor();    // ค่า Calibrate กลาง
-// SerialPositionF();                 // ตำแหน่งเส้น (หน้า)
-// SerialPositionB();                 // ตำแหน่งเส้น (หลัง)
+  /******************** LINE POSITION ********************/
+  set_position_line(3500);  // 0–7000 | 1500=ซ้าย 3500=กลาง 5500=ขวา
+
+  /******************** DISTANCE SENSOR ********************/
+  SetAnalogDistance(28);  // A0–A3 เซนเซอร์ตรวจจับวัตถุ
+
+  /******************** DEBUG / SERIAL MONITOR ********************/
+  // SerialDistance();                  // เซนเซอร์วัดระยะ
+  // Serial_FrontSensor();              // เซนเซอร์หน้า
+  // Serial_BackSensor();               // เซนเซอร์หลัง
+  // Serial_CenterSensor();             // เซนเซอร์กลาง
+  // SerialCalibrate_FrontSensor();     // ค่า Calibrate หน้า
+  // SerialCalibrate_BackSensor();      // ค่า Calibrate หลัง
+  // SerialCalibrate_CenterSensor();    // ค่า Calibrate กลาง
+  // SerialPositionF();                 // ตำแหน่งเส้น (หน้า)
+  // SerialPositionB();                 // ตำแหน่งเส้น (หลัง)
 }
 
 
@@ -120,4 +124,3 @@ void SetBalanceSpeedBackward() {  //ถอยหลัง
   setBalanceBackSpeed(SPD_90, 0, 0);   //ความเร็ว 90
   setBalanceBackSpeed(SPD_100, 0, 0);  //ความเร็ว 100
 }
-
