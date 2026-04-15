@@ -16,6 +16,19 @@ int LineColor = 0;
 
 int  DIST =  A0;
 
+// FRONT
+int FRONT_MIN = 80;
+int FRONT_MAX = 900;
+
+// CENTER
+int CENTER_MIN = 200;
+int CENTER_MAX = 900;
+
+// BACK
+int BACK_MIN = 400;
+int BACK_MAX = 900;
+
+
 void TrackLineColor(int Col) {
   LineColor = Col;
 }
@@ -52,6 +65,19 @@ void ReadC() {
 
 }
 
+void clampSensorValueF(int x, int y){
+  FRONT_MIN = x;
+  FRONT_MAX = y;
+}
+
+void clampSensorValueB(int x, int y){
+  CENTER_MIN = x;
+  CENTER_MAX = y;
+}
+void clampSensorValueC(int x, int y){
+  BACK_MIN = x;
+  BACK_MAX = y;
+}
 
 void ReadCalibrateF() {
   ReadF();
@@ -61,8 +87,8 @@ void ReadCalibrateF() {
       x = map(F[i], robot.sensorMinA[i], robot.sensorMaxA[i], 1000, 0);
     else
       x = map(F[i], robot.sensorMinA[i], robot.sensorMaxA[i], 0, 1000);
-    if (x < 80)   x = 0;
-    if (x > 900)  x = 1000;
+    if (x < FRONT_MIN)   x = 0;
+    if (x > FRONT_MAX)  x = 1000;
     // if (x < 0)    x = 0;
     // if (x > 1000) x = 1000;
     F[i] = x;
@@ -80,8 +106,8 @@ void ReadCalibrateC() {
       x = map(C[i], robot.sensorMinC[i], robot.sensorMaxC[i], 1000, 0);
     else
       x = map(C[i], robot.sensorMinC[i], robot.sensorMaxC[i], 0, 1000);
-    if (x < 200)   x = 0;
-    if (x > 900)  x = 1000;
+    if (x < CENTER_MIN)   x = 0;
+    if (x > CENTER_MAX)  x = 1000;
     // if (x < 0)    x = 0;
     // if (x > 1000) x = 1000;
     C[i] = x;
@@ -98,8 +124,8 @@ void ReadCalibrateB() {
       x = map(B[i], robot.sensorMinB[i], robot.sensorMaxB[i], 1000, 0);
     else
       x = map(B[i], robot.sensorMinB[i], robot.sensorMaxB[i], 0, 1000);
-    if (x < 300)   x = 0;
-    if (x > 800)  x = 1000;
+    if (x < BACK_MIN)   x = 0;
+    if (x > BACK_MAX)  x = 1000;
     // if (x < 0)    x = 0;
     // if (x > 1000) x = 1000;
     B[i] = x;

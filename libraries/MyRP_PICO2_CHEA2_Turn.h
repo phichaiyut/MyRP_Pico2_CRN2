@@ -112,9 +112,9 @@ int readPositionB_none(int Track, int noise) {
     if (last_value < (NUM_SENSORS - 1) * 1000 / 2)
     // if (last_value < set_position)
      {
-      return 0;
+      return 3500;
     } else {
-      return (NUM_SENSORS - 1) * 1000;
+      return 3500;
     }
   }
   last_value = avg / sum;
@@ -152,14 +152,21 @@ void PIDF_none(int SpeedL, int SpeedR, float Kp, float Kd) {
 void PIDB_none(int SpeedL, int SpeedR, float Kp, float Kd) {
   int Pos;
    ReadCalibrateB();
-  if (B[3] > Ref && B[4] > Ref) {
-    Pos = 3500;
-  } else {
+   if (B[3] > Ref && B[4] > Ref) {
+  Pos = 3500;
+}
+else if (B[4] > Ref && B[5] > Ref){
+  Pos = 4500;   // เผื่อเส้นเฉียง
+}
+else if (B[2] > Ref && B[3] > Ref) {
+  Pos = 2500;
+}
+else {
     Pos = readPositionB_none(250, 50);
   }
   // int Pos = readPositionB_none(250, 50);
   int Error = Pos - (NUM_SENSORS - 1) * 1000 / 2;
-  int PID_Value = ((Kp) * Error) + (Kd * (Error - LastError_B1));
+  int PID_Value = (Kp * Error) + (Kd * (Error - LastError_B1));
   LastError_B1 = Error;
 
   int LeftPower  = SpeedL  + PID_Value;
@@ -294,7 +301,7 @@ void BackCenterC() {
   
   while (1) {
     if(line_centor == 0){
-      robot.Motor(-tctL, -bctR);
+      robot.Motor(-bctL, -bctR);
     }
     else{
       PIDB_none(bctL,bctR,kp_slow1,kd_slow1);
@@ -304,7 +311,7 @@ void BackCenterC() {
     if (C[CCL] > RefC || C[CCR] > RefC)
     //if (analogRead(26) <  (sensorMin_C[0]+md_sensorC(0))/2 || analogRead(27) < (sensorMin_C[1]+md_sensorC(1))/2) 
   {
-      robot.Motor(tct, tct);
+      robot.Motor(bctL, bctR);
       delay(10);
       MotorStop();
       BZoff();

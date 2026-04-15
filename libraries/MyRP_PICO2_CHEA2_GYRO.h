@@ -32,6 +32,32 @@ InitialSpeed();
 robot.bw_gyro(BackLeftBaseSpeed, BackRightBaseSpeed, kp,  distance, offset);   // ความเร็ว 30 30  kp1.5   ระยะ 60 เซนติเมตร ค่าเบรค 10
 }
 
+
+
+void fw_gyros(int spdl, int spdr, float kp,  int distance,int offset){
+
+robot.fw_gyros(spdl, spdr, kp,  distance, offset);   // ความเร็ว 30 30  kp1.5   ระยะ 60 เซนติเมตร ค่าเบรค 10
+}
+
+void bw_gyros(int spdl, int spdr, float kp,  int distance,int offset){
+
+robot.bw_gyros(spdl, spdr, kp,  distance, offset);   // ความเร็ว 30 30  kp1.5   ระยะ 60 เซนติเมตร ค่าเบรค 10
+}
+
+
+void fw_gyros(int spd, float kp,  int distance,int offset){
+BaseSpeed = spd;
+InitialSpeed();
+robot.fw_gyros(LeftBaseSpeed, RightBaseSpeed, kp,  distance, offset);   // ความเร็ว 30 30  kp1.5   ระยะ 60 เซนติเมตร ค่าเบรค 10
+}
+
+void bw_gyros(int spd, float kp,  int distance,int offset){
+BaseSpeed = spd;
+InitialSpeed();
+robot.bw_gyros(BackLeftBaseSpeed, BackRightBaseSpeed, kp,  distance, offset);   // ความเร็ว 30 30  kp1.5   ระยะ 60 เซนติเมตร ค่าเบรค 10
+}
+
+
 void place_left_in(int spd,int degree,int offset){
 robot.place_left_in(spd, degree, offset) ;  //---> หมุนซ้ายเข้า มอเตอร์ ซ้าย 0   ขวา 30 หมุนไปที่  90 องศา
 
